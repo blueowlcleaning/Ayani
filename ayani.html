@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Ayani"/>
+<title>Ayani</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+body{background:#0a0a0f;color:#f0f0f5;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;min-height:100vh;overscroll-behavior:none}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+/* ── HEADER ── */
+.hdr{
+  padding:env(safe-area-inset-top,48px) 16px 0;
+  background:#0a0a0f;
+  position:sticky;top:0;z-index:30;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:12px}
+.logo{display:flex;align-items:center;gap:8px}
+.logo-icon{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#FF6B9D,#FFD93D,#4ECDC4);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.logo-text{font-size:22px;font-weight:800;background:linear-gradient(135deg,#FF6B9D,#FFD93D,#4ECDC4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px}
+.hdr-count{font-size:10px;color:#444;font-family:monospace;text-align:right;line-height:1.4}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;padding:0 0 10px}
+.search-input{width:100%;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.1);border-radius:14px;padding:11px 16px 11px 40px;color:#f0f0f5;font-size:14px;outline:none;transition:border-color 0.2s}
+.search-input:focus{border-color:rgba(255,180,100,0.4)}
+.search-input::placeholder{color:#444}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-60%);font-size:15px;pointer-events:none}
+.search-clear{position:absolute;right:12px;top:50%;transform:translateY(-60%);background:rgba(255,255,255,0.1);border:none;color:#aaa;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:none;align-items:center;justify-content:center}
+
+/* ── AGE TABS ── */
+.age-row{display:flex;gap:6px;padding:0 0 10px;overflow-x:auto}
+.age-row::-webkit-scrollbar{display:none}
+.age-btn{flex-shrink:0;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.08);color:#666;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;letter-spacing:0.3px}
+.age-btn.on{background:#fff;color:#000;border-color:#fff}
+
+/* ── CATEGORY CHIPS ── */
+.cats{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px}
+.cats::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;display:flex;align-items:center;gap:5px;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.2s;border:1.5px solid transparent;white-space:nowrap}
+.chip.off{background:rgba(255,255,255,0.05);color:#666;border-color:rgba(255,255,255,0.08)}
+.chip.on{color:#000}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px 16px 0;animation:fadeIn 0.3s ease}
+@media(min-width:480px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:720px){.grid{grid-template-columns:repeat(4,1fr)}}
+
+/* ── CARD ── */
+.card{border-radius:14px;overflow:hidden;cursor:pointer;background:#14141c;border:1px solid rgba(255,255,255,0.07);text-decoration:none;display:block;transition:transform 0.15s;-webkit-touch-callout:none}
+.card:active{transform:scale(0.96)}
+.thumb-wrap{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#1a1a24}
+.thumb{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.3s}
+.thumb.loading{opacity:0}
+.thumb-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;background:linear-gradient(135deg,var(--cc)11,var(--cc)06)}
+.play-btn{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;background:rgba(0,0,0,0.3)}
+.play-icon{width:38px;height:38px;background:rgba(255,255,255,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;padding-left:3px}
+.card:hover .play-btn{opacity:1}
+.duration{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,0.8);color:#fff;font-size:10px;font-family:monospace;font-weight:600;padding:2px 5px;border-radius:4px}
+.card-body{padding:8px 10px 10px}
+.card-title{font-size:11.5px;font-weight:600;color:#e0e0ea;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:5px}
+.card-meta{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.card-ch{font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70%}
+.card-age{font-size:9px;background:rgba(255,255,255,0.07);border-radius:8px;padding:2px 6px;color:#777;font-weight:700;flex-shrink:0}
+
+/* ── SKELETON ── */
+.skel{background:#14141c;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.05)}
+.skel-thumb{width:100%;aspect-ratio:16/9;background:linear-gradient(90deg,#1a1a24 25%,#22222e 50%,#1a1a24 75%);background-size:400px 100%;animation:shimmer 1.4s infinite}
+.skel-body{padding:8px 10px 10px}
+.skel-line{height:10px;border-radius:5px;background:linear-gradient(90deg,#1a1a24 25%,#22222e 50%,#1a1a24 75%);background-size:400px 100%;animation:shimmer 1.4s infinite;margin-bottom:6px}
+.skel-line.short{width:60%}
+
+/* ── LOAD MORE ── */
+.load-more-wrap{padding:20px 16px 30px;display:flex;justify-content:center}
+.load-more-btn{background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);color:#aaa;border-radius:14px;padding:12px 28px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.load-more-btn:active{background:rgba(255,255,255,0.12)}
+.load-more-btn:disabled{opacity:0.4;cursor:default}
+
+/* ── EMPTY ── */
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-msg{font-size:14px;color:#444;line-height:1.7}
+
+/* ── SPINNER ── */
+.spinner{width:22px;height:22px;border:2.5px solid rgba(255,255,255,0.15);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite}
+
+/* ── BOTTOM PADDING ── */
+.bottom-pad{height:env(safe-area-inset-bottom,20px)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="logo">
+      <div class="logo-icon">🌟</div>
+      <div class="logo-text">Ayani</div>
+    </div>
+    <div class="hdr-count" id="count">Loading…</div>
+  </div>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="search" placeholder="Search anything…" oninput="onSearch()" autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <button class="search-clear" id="clear-btn" onclick="clearSearch()">✕</button>
+  </div>
+  <div class="age-row">
+    <button class="age-btn on"  onclick="setAge('all',this)">All Ages</button>
+    <button class="age-btn"     onclick="setAge('baby',this)">👶 0–2</button>
+    <button class="age-btn"     onclick="setAge('toddler',this)">🐣 2–4</button>
+    <button class="age-btn"     onclick="setAge('preschool',this)">🎒 4–5</button>
+  </div>
+  <div class="cats" id="cats"></div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="load-more-wrap" id="lmw" style="display:none">
+  <button class="load-more-btn" id="lmbtn" onclick="loadMore()">
+    <span>Load More Videos</span>
+  </button>
+</div>
+<div class="bottom-pad"></div>
+
+<script>
+// ── API CONFIG ────────────────────────────────────────────
+const API_KEY = 'AIzaSyDd3PO_N58ybGonVpNFNXGr3cCPsKu33Hw';
+const API_BASE = 'https://www.googleapis.com/youtube/v3/search';
+const MAX_RESULTS = 48;
+
+// ── CATEGORIES ────────────────────────────────────────────
+const CATS = [
+  { id:'foryou',   e:'✨', label:'For You',     q:'best educational videos kids toddlers fun learning 2024',                  c:'#FFD93D' },
+  { id:'nursery',  e:'🎵', label:'Nursery',      q:'nursery rhymes babies toddlers songs cocomelon super simple',              c:'#FF6B9D' },
+  { id:'learning', e:'📚', label:'Learning',     q:'abc alphabet numbers colours shapes learning kids preschool',              c:'#96CEB4' },
+  { id:'science',  e:'🔬', label:'Science',      q:'science experiments for kids educational fun easy SciShow',               c:'#4ECDC4' },
+  { id:'animals',  e:'🐾', label:'Animals',      q:'animals for kids educational wildlife zoo facts toddlers',                 c:'#45B7D1' },
+  { id:'stories',  e:'📖', label:'Stories',      q:'bedtime stories for kids animated fairy tales moral',                     c:'#FFEAA7' },
+  { id:'cartoons', e:'🎬', label:'Cartoons',     q:'cartoons for kids animated educational fun episodes',                     c:'#DDA0DD' },
+  { id:'comedy',   e:'😂', label:'Comedy',       q:'funny comedy safe clean kids children hilarious compilation',             c:'#FFD93D' },
+  { id:'bet',      e:'🎭', label:'BET Family',   q:'BET family kids comedy safe funny clean variety show',                    c:'#9B59B6' },
+  { id:'inclusion',e:'🌈', label:'Inclusion',    q:'diversity inclusion for kids different abilities cultures equality',       c:'#FF8B94' },
+  { id:'blippi',   e:'🔵', label:'Blippi',       q:'blippi educational videos toddlers colours shapes vehicles',              c:'#3498DB' },
+  { id:'cocomelon',e:'🍉', label:'CoComelon',    q:'cocomelon nursery rhymes kids songs JJ compilation',                     c:'#E74C3C' },
+  { id:'sesame',   e:'🐸', label:'Sesame St.',   q:'sesame street episodes elmo big bird cookie monster learning',           c:'#F39C12' },
+  { id:'pbs',      e:'📺', label:'PBS Kids',     q:'PBS kids daniel tiger curious george wild kratts educational',           c:'#27AE60' },
+  { id:'dance',    e:'💃', label:'Dance',        q:'dance for kids movement songs exercise gross motor fun',                 c:'#FF8B94' },
+  { id:'art',      e:'🎨', label:'Art & Craft',  q:'art craft for kids easy drawing painting tutorial',                      c:'#A29BFE' },
+  { id:'nature',   e:'🌿', label:'Nature',       q:'nature for kids outdoor plants animals seasons weather',                  c:'#6BCB77' },
+  { id:'space',    e:'🚀', label:'Space',        q:'space for kids planets solar system astronauts NASA fun',                c:'#4D96FF' },
+  { id:'world',    e:'🌍', label:'World',        q:'world cultures countries for kids diversity geography facts',             c:'#00B894' },
+  { id:'emotions', e:'💛', label:'Emotions',     q:'emotions feelings social skills for kids animated preschool',            c:'#FDCB6E' },
+  { id:'food',     e:'🍎', label:'Food',         q:'cooking food healthy eating for kids recipe fun easy',                   c:'#FF6348' },
+  { id:'african',  e:'🥁', label:'African',      q:'african stories culture kids yoruba nigeria ghana kenya educational',     c:'#D35400' },
+  { id:'sports',   e:'⚽', label:'Sports',       q:'sports for kids football swimming gymnastics running fun active',        c:'#2ECC71' },
+  { id:'music',    e:'🎶', label:'Music',        q:'music instruments for kids piano drums guitar songs learning',            c:'#E056A0' },
+  { id:'drama',    e:'🎪', label:'Drama',        q:'drama roleplay social skills for kids theatre puppet acting',            c:'#FD79A8' },
+  { id:'disney',   e:'🏰', label:'Disney Jr',    q:'disney junior kids animated shows educational fun episodes',             c:'#6C5CE7' },
+  { id:'nick',     e:'🟠', label:'Nickelodeon',  q:'nickelodeon nick jr kids shows dora blues clues animated',              c:'#E17055' },
+  { id:'superheroes',e:'🦸',label:'Superheroes', q:'superheroes for kids educational moral stories animated adventures',     c:'#0984E3' },
+  { id:'stem',     e:'🤖', label:'STEM',         q:'STEM for kids coding robots engineering science technology',             c:'#00CEC9' },
+  { id:'yoga',     e:'🧘', label:'Yoga',         q:'yoga for kids cosmic kids relaxation breathing mindfulness fun',         c:'#A29BFE' },
+];
+
+// ── STATE ─────────────────────────────────────────────────
+let curCat    = CATS[0];
+let curAge    = 'all';
+let pageToken = '';
+let isLoading = false;
+let totalLoaded = 0;
+let searchTimer = null;
+let curQuery  = '';
+
+// ── AGE SUFFIX ────────────────────────────────────────────
+const AGE_SUFFIX = {
+  all:      '',
+  baby:     ' for babies toddlers 0 1 2 years old',
+  toddler:  ' for toddlers preschool 2 3 4 years old',
+  preschool:' for preschool kindergarten 4 5 years old',
+};
+
+// ── BUILD CATS ────────────────────────────────────────────
+function buildCats() {
+  document.getElementById('cats').innerHTML = CATS.map(c =>
+    `<div class="chip ${c.id===curCat.id?'on':'off'}" 
+         style="${c.id===curCat.id?`background:${c.c};border-color:${c.c}`:`border-color:${c.c}33;color:${c.c}`}"
+         onclick="selectCat('${c.id}')">
+       ${c.e} ${c.label}
+     </div>`
+  ).join('');
+}
+
+// ── SELECT CAT ────────────────────────────────────────────
+function selectCat(id) {
+  const cat = CATS.find(c=>c.id===id);
+  if(!cat || cat.id===curCat.id) return;
+  curCat = cat;
+  document.getElementById('search').value = '';
+  document.getElementById('clear-btn').style.display='none';
+  curQuery = '';
+  pageToken = '';
+  totalLoaded = 0;
+  buildCats();
+  fetchVideos(true);
+}
+
+// ── SET AGE ───────────────────────────────────────────────
+function setAge(age, el) {
+  curAge = age;
+  document.querySelectorAll('.age-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  pageToken = '';
+  totalLoaded = 0;
+  fetchVideos(true);
+}
+
+// ── SEARCH ────────────────────────────────────────────────
+function onSearch() {
+  const val = document.getElementById('search').value;
+  document.getElementById('clear-btn').style.display = val ? 'flex' : 'none';
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    curQuery = val.trim();
+    pageToken = '';
+    totalLoaded = 0;
+    fetchVideos(true);
+  }, 500);
+}
+
+function clearSearch() {
+  document.getElementById('search').value = '';
+  document.getElementById('clear-btn').style.display='none';
+  curQuery = '';
+  pageToken = '';
+  totalLoaded = 0;
+  fetchVideos(true);
+}
+
+// ── BUILD QUERY ───────────────────────────────────────────
+function buildQuery() {
+  const base = curQuery || curCat.q;
+  const age  = AGE_SUFFIX[curAge] || '';
+  return base + age;
+}
+
+// ── SKELETON ─────────────────────────────────────────────
+function showSkeletons(n=12) {
+  document.getElementById('grid').innerHTML = Array(n).fill(0).map(()=>`
+    <div class="skel">
+      <div class="skel-thumb"></div>
+      <div class="skel-body">
+        <div class="skel-line"></div>
+        <div class="skel-line short"></div>
+      </div>
+    </div>`).join('');
+}
+
+// ── FETCH ─────────────────────────────────────────────────
+async function fetchVideos(reset = false) {
+  if(isLoading) return;
+  isLoading = true;
+
+  const btn = document.getElementById('lmbtn');
+  const lmw = document.getElementById('lmw');
+
+  if(reset) {
+    showSkeletons();
+    lmw.style.display = 'none';
+  } else {
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div><span>Loading…</span>';
+  }
+
+  const q = buildQuery();
+  const params = new URLSearchParams({
+    part: 'snippet',
+    type: 'video',
+    safeSearch: 'strict',
+    maxResults: MAX_RESULTS,
+    q: q,
+    key: API_KEY,
+    relevanceLanguage: 'en',
+    videoEmbeddable: 'true',
+    ...(pageToken && !reset ? { pageToken } : {})
+  });
+
+  try {
+    const res  = await fetch(`${API_BASE}?${params}`);
+    const data = await res.json();
+
+    if(data.error) throw new Error(data.error.message);
+
+    const items = data.items || [];
+    pageToken = data.nextPageToken || '';
+
+    if(reset) {
+      renderCards(items, false);
+      totalLoaded = items.length;
+    } else {
+      appendCards(items);
+      totalLoaded += items.length;
+    }
+
+    document.getElementById('count').textContent = `${totalLoaded.toLocaleString()}+ videos`;
+
+    // Show load more if there's a next page
+    if(pageToken) {
+      lmw.style.display = 'flex';
+      btn.disabled = false;
+      btn.innerHTML = '<span>Load More Videos</span>';
+    } else {
+      lmw.style.display = 'none';
+    }
+
+  } catch(err) {
+    if(reset) {
+      document.getElementById('grid').innerHTML = `
+        <div class="empty" style="grid-column:1/-1">
+          <div class="empty-icon">⚠️</div>
+          <div class="empty-msg">Couldn't load videos.<br>Check your internet connection<br>and try again.</div>
+        </div>`;
+    }
+    lmw.style.display = 'none';
+    console.error('YouTube API error:', err);
+  }
+
+  isLoading = false;
+}
+
+// ── LOAD MORE ─────────────────────────────────────────────
+function loadMore() {
+  fetchVideos(false);
+}
+
+// ── RENDER CARDS ─────────────────────────────────────────
+function renderCards(items, append) {
+  const grid = document.getElementById('grid');
+  if(!append) grid.innerHTML = '';
+
+  if(!items.length && !append) {
+    grid.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-msg">No videos found.<br>Try a different search or category.</div></div>`;
+    return;
+  }
+
+  items.forEach(item => grid.appendChild(buildCard(item)));
+}
+
+function appendCards(items) {
+  const grid = document.getElementById('grid');
+  items.forEach(item => grid.appendChild(buildCard(item)));
+}
+
+// ── BUILD CARD ────────────────────────────────────────────
+function buildCard(item) {
+  const vid   = item.id.videoId;
+  const sn    = item.snippet;
+  const title = sn.title.replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  const ch    = sn.channelTitle;
+  const thumb = sn.thumbnails?.medium?.url || sn.thumbnails?.default?.url || '';
+  const url   = `https://www.youtube.com/watch?v=${vid}`;
+  const color = curCat.c;
+  const emoji = curCat.e;
+
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.style.setProperty('--cc', color);
+
+  a.innerHTML = `
+    <div class="thumb-wrap">
+      <div class="thumb-placeholder">${emoji}</div>
+      <img class="thumb loading" 
+           src="${thumb}" 
+           alt="${title}"
+           loading="lazy"
+           onload="this.classList.remove('loading')"
+           onerror="this.style.display='none'">
+      <div class="play-btn"><div class="play-icon">▶</div></div>
+    </div>
+    <div class="card-body">
+      <div class="card-title">${title}</div>
+      <div class="card-meta">
+        <div class="card-ch">${ch}</div>
+        <div class="card-age">${getAgeLabel()}</div>
+      </div>
+    </div>`;
+  return a;
+}
+
+function getAgeLabel() {
+  const labels = { all:'All', baby:'0-2y', toddler:'2-4y', preschool:'4-5y' };
+  return labels[curAge] || 'All';
+}
+
+// ── INIT ─────────────────────────────────────────────────
+buildCats();
+fetchVideos(true);
+</script>
+</body>
+</html>
